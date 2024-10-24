@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Import the http package
+import 'package:http/http.dart' as http;
 import 'dart:convert'; // For jsonEncode
 import 'package:intel_eye/utils/camera_data.dart';
 import 'package:intel_eye/views/widgets/camera_card.dart';
+import 'package:intel_eye/api_service.dart'; // Import ApiService
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/homeScreen';
@@ -13,31 +14,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Initial switch state (can be true for 1 or false for 0)
+  // Initial switch state (true = ON, false = OFF)
   bool switchState = true;
 
-  // Function to toggle the switch
+  final ApiService apiService = ApiService(); // Create instance of ApiService
+
+  // Function to toggle the switch and send API request
   Future<void> toggleSwitch() async {
-    final deviceId = 'A001';
-    final newState = switchState ? 0 : 1; // Toggle state
-    final url = 'http://20.219.219.69:8078/apiv2/changestatus';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'device_id': deviceId, 'value': newState}),
-      );
+      // Call API with the current switch state
+      await apiService.toggleSwitch(switchState);
 
-      if (response.statusCode == 200) {
-        // Optionally update the local switch state
-        setState(() {
-          switchState = !switchState; // Toggle the switch state
-        });
-      } else {
-        // Handle error response
-        print('Error: ${response.body}');
-      }
+      // Update the switch state in the UI
+      setState(() {
+        switchState = !switchState;
+      });
     } catch (e) {
       print('Exception occurred: $e');
     }
@@ -46,31 +37,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 3,
         actions: [
-          Text(
+          const Text(
             "Net+ Secure",
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
         ],
-        leading: Icon(Icons.menu_rounded),
+        leading: const Icon(Icons.menu_rounded),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     Padding(
-                      padding: const EdgeInsets.only(left: 15),
+                      padding: EdgeInsets.only(left: 15),
                       child: Text("Camera"),
                     ),
                     Text("Notification"),
@@ -84,23 +76,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     // Toggle Button for Light (Switch)
                     GestureDetector(
-                      onTap: toggleSwitch, // Call the toggle function
+                      onTap: toggleSwitch, // Call the toggle function on tap
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(switchState ? Icons.lightbulb : Icons.lightbulb_outline),
-                          Text("Light"),
+                          Icon(
+                            switchState ? Icons.lightbulb : Icons.lightbulb_outline,
+                          ),
+                          const Text("Light"),
                         ],
                       ),
                     ),
-                    Text("Alarm"),
+                    const Text("Alarm"),
                   ],
                 ),
                 flex: 1,
               ),
             ],
           ),
-          Divider(),
+          const Divider(),
           Expanded(
             child: ListView.builder(
               itemCount: cameraData.length,
