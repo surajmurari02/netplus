@@ -1,12 +1,16 @@
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 import 'dart:convert'; // For JSON encoding
 
 class ApiService {
   // API call to toggle the switch
   Future<void> toggleSwitch(bool isOn) async {
+    var logger = Logger();
+    logger.d("Logger is working!");
     final String devStatus = isOn ? '1' : '0';
     final String apiUrl = 'http://20.219.219.69:8078/apiv2/changestatus';
     final String deviceId = 'A001';
+    
 
     try {
       final response = await http.post(
