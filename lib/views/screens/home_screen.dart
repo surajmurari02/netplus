@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert'; // For jsonEncode
 import 'package:intel_eye/utils/camera_data.dart';
 import 'package:intel_eye/views/widgets/camera_card.dart';
+import 'package:intel_eye/views/screens/login_page.dart';
 import 'package:intel_eye/api_service.dart'; // Import ApiService
 
 class HomeScreen extends StatefulWidget {
@@ -43,12 +44,17 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 3,
         actions: [
           const Text(
-            "Net+ Secure",
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
+            "AI Vision Pro",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
           ),
           const SizedBox(width: 20),
         ],
-        leading: const Icon(Icons.menu_rounded),
+        leading: IconButton(
+          icon: const Icon(Icons.logout_rounded),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, LoginPage.routeName);
+          },
+        ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -83,11 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(
                             switchState ? Icons.lightbulb : Icons.lightbulb_outline,
                           ),
-                          const Text("Light"),
+                          const Text("Light & Alarm"),
                         ],
                       ),
                     ),
-                    const Text("Alarm"),
+                    // const Text("Alarm"),
                   ],
                 ),
                 flex: 1,
@@ -106,6 +112,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+      // Add the bottomNavigationBar here
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              "Powered by: Samajh.ai",
+              style: TextStyle(color: Colors.red, fontSize: 16), // Optional: customize the text style
+            ),
+          ],
+        ),
       ),
     );
   }

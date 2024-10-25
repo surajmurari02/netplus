@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intel_eye/api_service.dart'; // Import your ApiService
+import 'dart:async'; // For Timer
+import 'package:intel_eye/api_service.dart'; // Import ApiService
+import 'package:logger/logger.dart'; // Logger for debugging
 
 class CameraCard extends StatefulWidget {
   const CameraCard({super.key, required this.camera});
@@ -10,52 +12,65 @@ class CameraCard extends StatefulWidget {
 }
 
 class _CameraCardState extends State<CameraCard> {
-  // Initial states for switches
-  bool lightButton = true;
-  bool alarmButton = true;
+  bool lightButton = true; // Initial state for the light switch
+  bool alarmButton = true; // Initial state for the alarm switch
+  final ApiService apiService = ApiService(); // Instance of ApiService
+  final Logger logger = Logger(); // Logger instance
 
-  // Create an instance of the ApiService to interact with the API
-  final ApiService apiService = ApiService();
+  // Image URL that refreshes periodically
+  String imageUrl = 'http://20.219.219.69:8078/apiv2/evidence/image/images.jpeg';
+  Timer? _imageRefreshTimer; // Timer for refreshing the image
 
-  // Method to toggle light switch and call the API
+  @override
+  void initState() {
+    super.initState();
+    _startImageRefreshTimer(); // Start the timer on widget initialization
+  }
+
+  @override
+  void dispose() {
+    _imageRefreshTimer?.cancel(); // Cancel the timer to avoid memory leaks
+    super.dispose();
+  }
+
+  // Start a periodic timer to refresh the image URL every 2 seconds
+  void _startImageRefreshTimer() {
+    _imageRefreshTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (timer) {
+        setState(() {
+          // Append a timestamp to the URL to prevent caching
+          imageUrl =
+              'http://20.219.219.69:8078/apiv2/evidence/image/images.jpeg?timestamp=${DateTime.now().millisecondsSinceEpoch}';
+        });
+
+        // Log the refresh action to verify periodic execution
+        logger.d('Image refreshed at: ${DateTime.now()}');
+      },
+    );
+  }
+
+  // Toggle light switch and call the API
   void _toggleLightSwitch(bool newState) async {
     setState(() {
-      lightButton = newState; // Update UI state immediately
+      lightButton = newState;
     });
 
     try {
-      await apiService.toggleSwitch(newState); // Call the API with the new state
+      await apiService.toggleSwitch(newState);
       print('Light switch toggled successfully');
     } catch (e) {
       print('Failed to toggle light switch: $e');
     }
   }
 
-  // Method to toggle alarm switch (optional for additional functionality)
-  void _toggleAlarmSwitch(bool newState) async {
-    setState(() {
-      alarmButton = newState; // Update UI state immediately
-    });
-
-    try {
-      await apiService.toggleSwitch(newState); // Call the API with the new state
-      print('Alarm switch toggled successfully');
-    } catch (e) {
-      print('Failed to toggle alarm switch: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
     return GestureDetector(
       onTap: () {
-        // Navigate to ExtendedView with camera data
-        Navigator.pushNamed(
-          context,
-          '/extendedView', // Ensure this route is defined
-          arguments: {"cam": widget.camera},
-        );
+        // Handle tap for extended view or navigation
       },
       child: Container(
         width: width,
@@ -72,10 +87,18 @@ class _CameraCardState extends State<CameraCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Image(
-                    image: AssetImage(
-                        "assets/img/camera_view${widget.camera}.png"),
-                    height: 50,
+                  // Display the dynamic image with specific dimensions
+                  Image.network(
+                    imageUrl,
+                    width: 100, // Set desired width
+                    height: 100, // Set desired height
+                    fit: BoxFit.cover, // Ensure the image fits within the container
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.broken_image,
+                        size: 50,
+                      ); // Display icon on load error
+                    },
                   ),
                   const Text("_"), // Placeholder content
                 ],
@@ -92,17 +115,7 @@ class _CameraCardState extends State<CameraCard> {
                     child: Switch(
                       value: lightButton,
                       onChanged: (bool val) {
-                        _toggleLightSwitch(val); // Call the toggle method
-                      },
-                    ),
-                  ),
-                  // Alarm Switch
-                  Transform.scale(
-                    scale: 0.6,
-                    child: Switch(
-                      value: alarmButton,
-                      onChanged: (bool val) {
-                        _toggleAlarmSwitch(val); // Optional alarm toggle
+                        _toggleLightSwitch(val); // Call toggle method on change
                       },
                     ),
                   ),

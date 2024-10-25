@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startTimer() {
-    _timer = Timer(const Duration(seconds: 3), () {
+    _timer = Timer(const Duration(seconds: 4), () {
       Navigator.of(context).pushReplacementNamed(LoginPage.routeName);
     });
   }
